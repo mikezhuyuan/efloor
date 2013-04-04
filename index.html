@@ -158,54 +158,95 @@ body {
 
 <script>
 //sprite
-var Sprite = function($el, dialog){
-	var id = parseInt(Math.random() * 1000000000),
-		_this = this;
-	this.$el = $el;
-	Sprite.items[id] = this;
-
-	$el.attr('sid', id)
-		.mouseover(function(){
-			if(dialog.current && dialog.mode() === 'edit')
-				return;
-
-			dialog.view(_this);
-		})
-		.click(function(){
-			dialog.edit(_this);
-		});
+var Sprite = function(data){
+	this.data = data;
+	Sprite.items[this.id = data.id] = this;
+	this.$el = 
+		$('<sprite class="'+data.className+'">')
+		.css({left:data.x, top:data.y})
+		.attr('sid', data.id);
+	
 };
+
+Sprite.new = function(x, y, className) {
+	var id = parseInt(Math.random() * 1000000000);
+	return new Sprite({
+		id:id,
+		x:x,
+		y:y,
+		className:className,
+		detail:null
+	});
+}
+
+Sprite.create = function(data) {
+	return new Sprite(data);
+}
 
 Sprite.items = Object.create(null);
 
 Sprite.prototype = {
 	remove : function(){
-		delete Sprite.items[this.$el.attr('sid')];
+		delete Sprite.items[this.id];
 		this.$el.remove();
+		this.$el = null;
+		this.data = null;
+	}, 
+	detail: function(val){
+		if(val) {
+			this.data.detail = val;
+		}
+
+		return this.data.detail;
 	}
 };
 
 </script>
 
 <script>
+//remote
+window.remote = (function(){
+	return {
+		addSprite : function(data){
+			//TODO
+		},
+
+		removeSprite : function(id){
+			//TODO
+
+		},
+
+		updateSprite : function(data){
+			//TODO
+
+		}
+	};
+})();
+</script>
+
+<script>
 //dialog
-var Dialog = function($dialog, map){
+var Dialog = function($dialog){
 	var _this = this;
 	this.$dialog = $dialog;
-	this.map = map;
 	$dialog.find('.dialog_header_close').click(function(e){
 		_this.close();
 		e.preventDefault();
 	});
 
 	$dialog.find('.dialog_edit_delete').click(function(){
-		_this.current.remove();
+		var id = _this.sprite;
+		_this.sprite.remove();
 		_this.close();
+
+		window.remote.removeSprite(id);
 	});
 
 	$dialog.find('.dialog_edit_save').click(function(){
-		_this.current.detail = $dialog.find('.dialog_edit_content').val();
-		_this.view(_this.current);
+		_this.sprite.detail($dialog.find('.dialog_edit_content').val());
+		_this.view(_this.sprite);
+
+		window.remote.updateSprite(_this.sprite.data);
 	});
 };
 
@@ -218,18 +259,18 @@ Dialog.prototype = {
 			sx = sprite.$el.position().left,
 			sy = sprite.$el.position().top;
 
-		this.current = sprite;
+		this.sprite = sprite;
 		this.$dialog.css({
-			left: sx + (sw - dw) / 2 - this.map.offsetX,
-			top: sy - dh - 10 - this.map.offsetY
+			left: sx + (sw - dw) / 2 - window.map.offsetX,
+			top: sy - dh - 10 - window.map.offsetY
 		});
 	},
 
 	view : function(sprite) {
-		if(sprite && sprite.detail) {
+		if(sprite && sprite.detail()) {
 			this._setPos(sprite);
 			this.$dialog.attr('class', 'view');
-			this.$dialog.find('.dialog_view').html(sprite.detail);
+			this.$dialog.find('.dialog_view').html(sprite.detail());
 			this.$dialog.show();
 		}
 	},
@@ -237,14 +278,14 @@ Dialog.prototype = {
 	edit : function(sprite) {
 		if(sprite) {
 			this._setPos(sprite);
-			this.$dialog.find('.dialog_edit_content').val(sprite.detail);
+			this.$dialog.find('.dialog_edit_content').val(sprite.detail());
 			this.$dialog.attr('class', 'edit');
 			this.$dialog.show();
 		}
 	},
 
 	close : function() {
-		this.current = null;
+		this.sprite = null;
 		this.$dialog.hide();
 	},
 
@@ -255,45 +296,68 @@ Dialog.prototype = {
 </script>
 
 <script>
-var Map = function() {
-	this.$map = $('#map');
-	this.offsetX = 0;
-	this.offsetY = 0;
-	this.dialog = new Dialog($('#dialog'), this);
-}
+window.map = (function() {
+	var $map = $('#map'),
+		$container  = $('#container'),
+		dialog = new Dialog($('#dialog'));
 
-Map.prototype = {
-	addSprite : function(pageX, pageY, $el) {
-		//TODO: check if not drop in map
-		var coff = this.$map.parent().offset(),
-			width = $el.width(),
-			height = $el.height();
+	return {
+		offsetX : 0,
+		offsetY : 0,
+		addSprite : function(sprite) {
+			sprite
+				.$el
+			  	.mouseover(function(){
+					if(dialog.current && dialog.mode() === 'edit')
+						return;
 
-		$el.css({
-			left: pageX - coff.left - (width/2) - this.offsetX, 
-			top: pageY - coff.top - (height/2) - this.offsetY
-		});
+					dialog.view(sprite);
+				})
+				.click(function(){
+					dialog.edit(sprite);
+				})
+				.appendTo($map);
+		},
+		move : function(dx, dy){
+			$map.css('-webkit-transform', 'translate(' + (this.offsetX + dx) + 'px, ' + (this.offsetY + dy) + 'px)');
+		}
+	}
+})();
+</script>
 
-		this.$map.append($el);
-		new Sprite($el, this.dialog);
+<script>
+//callback invoked by remote
+window.client = {
+	addSprite : function(data) {
+		if(data.id in Sprite.items){
+			Sprite.items[data.id].remove();
+		}
+
+		var sprite = Sprite.create(data);
+		window.map.addSprite(sprite);
 	},
 
-	createSprite: function(sprite) {
-		var $el = $('<sprite class="' + sprite.className + '"/>');
-		$el.css({left:sprite.x, right:sprite.y});
-		
-		this.$map.append($el);
-		new Sprite($el, this.dialog);	
+	removeSprite : function(id) {
+		if(id in Sprite.items){
+			Sprite.items[id].remove();
+		}
+	},
+
+	updateSprite : function(data){
+		if(data.id in Sprite.items){
+			Sprite.items[data.id].detail = data.detail;
+		} else {
+			this.addSprite(data);
+		}
 	}
 };
+
 </script>
 
 <script>
 function main() {
 	var $body = $('body'), 
-		$container = $('#container'), 
-		$map = $('#map'),
-		map = new Map();
+		$container = $('#container');
 	
 	//sprite list
 	$('#list sprite').mousedown(function(e){
@@ -310,10 +374,17 @@ function main() {
 				$el.css({position:"absolute", left:e.pageX - (width/2) + "px", top:e.pageY-(height/2) + "px"});
 			})
 			.mouseup(function(e){	
-				map.addSprite(e.pageX, e.pageY, $el);
-				
+				var coff = $container.offset(),
+					x = e.pageX - coff.left - ($el.width()/2) - map.offsetX, 
+					y = e.pageY - coff.top - ($el.height()/2) - map.offsetY,
+					sprite = Sprite.new(x, y, $el.attr('class'));
+
+				map.addSprite(sprite);
+				$el.remove();
 				$body.unbind('mousemove mouseup');
 				$container.unbind('mouseup');
+
+				window.remote.addSprite(sprite.data);
 			});
 	});
 
@@ -326,7 +397,7 @@ function main() {
 				.mousemove(function(e){
 					dx = (e.pageX - x1);
 					dy = (e.pageY - y1);
-					$map.css('-webkit-transform', 'translate(' + (map.offsetX + dx) + 'px, ' + (map.offsetY + dy) + 'px)');
+					map.move(dx, dy);
 				})
 				.bind('map mouseup mouseleave', function(e){
 					map.offsetX += dx, map.offsetY += dy;
