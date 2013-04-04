@@ -1,0 +1,345 @@
+<!doctype html>
+<html>
+<head>
+<style>
+body {
+	-webkit-user-select: none; 
+}
+
+#map > sprite{		
+	position:absolute;
+	cursor: pointer;
+}
+
+#map > sprite:hover{		
+	position:absolute;
+	outline: 1px solid #cbcbcb;
+}
+
+#container {
+	border: 1px solid #cbcbcb;
+	float: left;
+	margin:10px;
+	width:800px;
+	height:600px;
+	overflow:hidden;
+	position:relative;
+}
+
+#panel {
+	float: left;
+	width: 256px;
+	padding: 10px;
+}
+
+#list {
+	border: 1px solid #cbcbcb;
+	margin-top:10px;
+	overflow: auto;
+}
+
+#list > sprite {
+	margin:10px;
+	float:left;
+	cursor: pointer;
+}
+
+#list > sprite:hover{
+	outline: 1px solid #cbcbcb;
+}
+</style>
+
+<style>
+/*dialog style*/
+#dialog {
+	position:absolute;
+	border:1px solid #ccc;
+	width:256px;
+	height:128px;		
+	overflow:hidden;		
+}
+
+#dialog.view .dialog_view{
+	display: block;
+}
+
+#dialog.view .dialog_edit{
+	display: none;
+}
+
+#dialog.edit .dialog_view{
+	display: none;
+}
+
+#dialog.edit .dialog_edit{
+	display: block;
+}
+</style>
+
+<style>
+/*sprite style*/
+.class1{
+	width:32px;
+	height:48px;
+	background-image: url('sprites.png');
+	background-repeat:no-repeat;
+	background-position:right top;
+	background-position: 0px 0px;
+}
+
+.class2{
+	width:32px;
+	height:48px;
+	background-image: url('sprites.png');
+	background-repeat:no-repeat;
+	background-position:right top;
+	background-position: -128px 0px;
+}
+
+.class3{
+	width:32px;
+	height:48px;
+	background-image: url('sprites.png');
+	background-repeat:no-repeat;
+	background-position:right top;
+	background-position: -256px 0px;
+}
+</style>
+
+<script src="jquery.js" type="text/javascript"></script>
+
+</head>
+
+<body>
+<h1>EFloor</h1>
+
+<div id="panel">
+	<div>
+		<button style="float:right" id="search">Search</button>
+		<input style="width:70%" type="text" />
+	</div>
+	<div id="list">	
+		<sprite class="class1"></sprite>
+		<sprite class="class2"></sprite>
+		<sprite class="class3"></sprite>
+		<sprite class="class1"></sprite>
+		<sprite class="class2"></sprite>
+		<sprite class="class3"></sprite>
+		<sprite class="class1"></sprite>
+		<sprite class="class2"></sprite>
+		<sprite class="class3"></sprite>
+		<sprite class="class1"></sprite>
+		<sprite class="class2"></sprite>
+		<sprite class="class3"></sprite>
+	</div>
+</div>
+<div id="container">
+	<div id="map">
+		<div id="dialog" style="display:none" class="view">
+			<div class="dialog_header">
+				<a class="dialog_header_close" href="#">x</a>
+			</div>
+			<div class="dialog_body">
+				<div class="dialog_view">
+					
+				</div>
+				<div class="dialog_edit">
+					<textarea class="dialog_edit_content"></textarea>
+					<div class="dialog_edit_buttons">
+						<button class="dialog_edit_save">Save</button>
+						<button class="dialog_edit_delete">Delete</button>
+					</div>
+				</div>	
+			</div>
+			<div class="dialog_footer"></div>			
+		</div>
+	</div>
+</div>
+
+<script>
+//sprite
+var Sprite = function($el, dialog){
+	var id = parseInt(Math.random() * 1000000000),
+		_this = this;
+	this.$el = $el;
+	Sprite.items[id] = this;
+
+	$el.attr('sid', id)
+		.mouseover(function(){
+			if(dialog.current && dialog.mode() === 'edit')
+				return;
+
+			dialog.view(_this);
+		})
+		.click(function(){
+			dialog.edit(_this);
+		});
+};
+
+Sprite.items = Object.create(null);
+
+Sprite.prototype = {
+	remove : function(){
+		delete Sprite.items[this.$el.attr('sid')];
+		this.$el.remove();
+	}
+};
+
+</script>
+
+<script>
+//dialog
+var Dialog = function($dialog, map){
+	var _this = this;
+	this.$dialog = $dialog;
+	this.map = map;
+	$dialog.find('.dialog_header_close').click(function(e){
+		_this.close();
+		e.preventDefault();
+	});
+
+	$dialog.find('.dialog_edit_delete').click(function(){
+		_this.current.remove();
+		_this.close();
+	});
+
+	$dialog.find('.dialog_edit_save').click(function(){
+		_this.current.detail = $dialog.find('.dialog_edit_content').val();
+		_this.view(_this.current);
+	});
+};
+
+Dialog.prototype = {
+	_setPos : function(sprite) {
+		var dw = this.$dialog.width(),
+			dh = this.$dialog.height(),
+			sw = sprite.$el.width(),
+			sh = sprite.$el.height(),
+			sx = sprite.$el.position().left,
+			sy = sprite.$el.position().top;
+
+		this.current = sprite;
+		this.$dialog.css({
+			left: sx + (sw - dw) / 2 - this.map.offsetX,
+			top: sy - dh - 10 - this.map.offsetY
+		});
+	},
+
+	view : function(sprite) {
+		if(sprite && sprite.detail) {
+			this._setPos(sprite);
+			this.$dialog.attr('class', 'view');
+			this.$dialog.find('.dialog_view').html(sprite.detail);
+			this.$dialog.show();
+		}
+	},
+
+	edit : function(sprite) {
+		if(sprite) {
+			this._setPos(sprite);
+			this.$dialog.find('.dialog_edit_content').val(sprite.detail);
+			this.$dialog.attr('class', 'edit');
+			this.$dialog.show();
+		}
+	},
+
+	close : function() {
+		this.current = null;
+		this.$dialog.hide();
+	},
+
+	mode : function(){
+		return this.$dialog.attr('class');
+	}
+};
+</script>
+
+<script>
+var Map = function() {
+	this.$map = $('#map');
+	this.offsetX = 0;
+	this.offsetY = 0;
+	this.dialog = new Dialog($('#dialog'), this);
+}
+
+Map.prototype = {
+	addSprite : function(pageX, pageY, $el) {
+		//TODO: check if not drop in map
+		var coff = this.$map.parent().offset(),
+			width = $el.width(),
+			height = $el.height();
+
+		$el.css({
+			left: pageX - coff.left - (width/2) - this.offsetX, 
+			top: pageY - coff.top - (height/2) - this.offsetY
+		});
+
+		this.$map.append($el);
+		new Sprite($el, this.dialog);
+	},
+
+	createSprite: function(sprite) {
+		var $el = $('<sprite class="' + sprite.className + '"/>');
+		$el.css({left:sprite.x, right:sprite.y});
+		
+		this.$map.append($el);
+		new Sprite($el, this.dialog);	
+	}
+};
+</script>
+
+<script>
+function main() {
+	var $body = $('body'), 
+		$container = $('#container'), 
+		$map = $('#map'),
+		map = new Map();
+	
+	//sprite list
+	$('#list sprite').mousedown(function(e){
+		var $this = $(this),
+		    $el = $this.clone(),
+		    width = $this.width(),
+		    height = $this.height();
+		
+		$el.css({position:"absolute", left:e.pageX - (width/2) + "px", top:e.pageY-(height/2) + "px"});
+		
+		$body
+			.append($el)
+			.mousemove(function(e){
+				$el.css({position:"absolute", left:e.pageX - (width/2) + "px", top:e.pageY-(height/2) + "px"});
+			})
+			.mouseup(function(e){	
+				map.addSprite(e.pageX, e.pageY, $el);
+				
+				$body.unbind('mousemove mouseup');
+				$container.unbind('mouseup');
+			});
+	});
+
+	//map
+	$container.mousedown(function(e){
+		if(e.target.id === 'container') {
+			var x1 = e.pageX, y1 = e.pageY, dx=0, dy=0;
+			
+			$container
+				.mousemove(function(e){
+					dx = (e.pageX - x1);
+					dy = (e.pageY - y1);
+					$map.css('-webkit-transform', 'translate(' + (map.offsetX + dx) + 'px, ' + (map.offsetY + dy) + 'px)');
+				})
+				.bind('map mouseup mouseleave', function(e){
+					map.offsetX += dx, map.offsetY += dy;
+					$container.unbind('mousemove mouseup mouseleave');
+				});
+		}
+	});
+}
+
+$(function(){
+	main();
+});
+
+</script>
+</body>
+</html>
