@@ -1,9 +1,22 @@
 var express = require('express')
 var sockjs  = require('sockjs')
+var MongoClient = require('mongodb')
 var http = require('http')
 var users = Object.create(null)
 var sprites = Object.create(null)
 var handlers = Object.create(null)
+var database = {
+	addSprite : function(){},
+	removeSprite : function(){},
+	updateSprite : function(){},
+	loadSprites : function(callback){
+		callback([])
+	},
+	search : function(keyword, callback){
+		//todo: in memory search
+		callback([])
+	}
+}
 
 //communication
 var client = {
@@ -58,6 +71,72 @@ endpoint.on('connection', function(conn) {
 	client.call(conn, 'init', data)
 })
 
+//db
+MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
+	if(err){return console.log('cannot connect to mongodb');}
+
+	var collection = db.collection('sprites');
+	database = {
+		addSprite : function(data){
+			if(data.detail) {
+				data.text = data.detail.replace(/<[^>]*?>/g, '')
+			}
+			collection.insert(data, function(err){
+				if(err) {
+					return console.log(err)
+				}
+			})
+		},
+		removeSprite : function(id){
+			console.log('delete: ' + id)
+			collection.remove({id:id}, function(err){
+				if(err) {
+					return console.log(err)
+				}
+			})
+		},
+		updateSprite : function(data){
+			if(data.detail) {
+				data.text = data.detail.replace(/<[^>]*?>/g, '')
+			}
+			collection.update({id:data.id}, {$set:{detail:data.detail, text:data.text}}, function(err){
+				if(err) {
+					return console.log(err)
+				}
+			})
+		},
+		loadSprites : function(callback){
+			collection
+				.find({}, {id:1, x:1, y:1, className:1, detail:1, _id : 0})
+				.toArray(function(err, items){
+					if(err) {
+						return console.log(err)
+					}
+					callback(items)
+				})
+		},
+		search : function(keyword, callback) {
+			if(!keyword){return callback([])}
+			collection
+				.find({text:new RegExp(keyword)}, {id:1, className:1, text:1, _id : 0})
+				.toArray(function(err, items){
+					if(err) {
+						callback([])
+						return console.log(err)
+					}
+					callback(items)
+				})
+		}
+	};
+
+	database.loadSprites(function(items){
+		for(var i=0;i<items.length;i++){
+			var item = items[i]
+			sprites[item.id] = item
+		}
+	})
+});
+
 //app logic
 var User = (function(){
 	var type = function(conn) {
@@ -80,6 +159,7 @@ var User = (function(){
 server.register('addSprite', function(conn, data){
 	var id = conn.id
 	sprites[data.id] = data
+	database.addSprite(data)
 	broadcast(id, function(user){
 		client.call(user.conn, 'addSprite', data)
 	})
@@ -87,6 +167,7 @@ server.register('addSprite', function(conn, data){
 
 server.register('removeSprite', function(conn, sid){
 	delete sprites[sid]
+	database.removeSprite(sid)
 	broadcast(conn.id, function(user){
 		client.call(user.conn, 'removeSprite', sid)
 	})
@@ -94,6 +175,7 @@ server.register('removeSprite', function(conn, sid){
 
 server.register('updateSprite', function(conn, data){
 	sprites[data.id] = data
+	database.updateSprite(data)
 	broadcast(conn.id, function(user){
 		client.call(user.conn, 'updateSprite', data)
 	})
@@ -108,6 +190,12 @@ endpoint.installHandlers(server, {prefix:'/endpoint'})
 
 app.get('/', function (req, res) {
     res.sendfile(__dirname + '/index.html')
+})
+
+app.get('/search', function(req, res){
+	database.search(req.query.q, function(result){
+		res.json(result)
+	})
 })
 
 server.listen(9999, '0.0.0.0')
