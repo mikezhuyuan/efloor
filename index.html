@@ -107,6 +107,7 @@ body {
 </style>
 
 <script src="jquery.js" type="text/javascript"></script>
+<script src="sockjs.js"></script>
 
 </head>
 
@@ -155,7 +156,41 @@ body {
 		</div>
 	</div>
 </div>
+<script>
+window.net = (function(){
+	var sockjs, 
+		obj;
 
+	return {
+	  connect: function(callback) {
+	  	var _this = this;
+	  	sockjs = new SockJS('/endpoint');		
+		
+		sockjs.onopen = function()  {
+		  sockjs.onmessage = function(e) {
+		    console.log('onmessage: ' + e);            
+		    var data = JSON.parse(e.data), h;		    
+	  		(h = _this.client[data.method]) && h.apply(null, data.args);
+		  };
+
+		  callback && callback()
+		};
+
+		sockjs.onclose = function()  {
+		  console.log('disconnected');
+		  _this.onclose && _this.onclose()
+		};
+	  },
+
+	  server : function(name) {
+	    var args = Array.prototype.slice.call(arguments, 1);
+	    sockjs.send(JSON.stringify({method:name, args:args}));
+	  },
+
+	  client : Object.create(null)
+	};
+})();
+</script>
 <script>
 //sprite
 var Sprite = function(data){
@@ -204,27 +239,6 @@ Sprite.prototype = {
 </script>
 
 <script>
-//remote
-window.remote = (function(){
-	return {
-		addSprite : function(data){
-			//TODO
-		},
-
-		removeSprite : function(id){
-			//TODO
-
-		},
-
-		updateSprite : function(data){
-			//TODO
-
-		}
-	};
-})();
-</script>
-
-<script>
 //dialog
 var Dialog = function($dialog){
 	var _this = this;
@@ -235,18 +249,18 @@ var Dialog = function($dialog){
 	});
 
 	$dialog.find('.dialog_edit_delete').click(function(){
-		var id = _this.sprite;
+		var id = _this.sprite.id;
 		_this.sprite.remove();
 		_this.close();
 
-		window.remote.removeSprite(id);
+		window.net.server('removeSprite', id);
 	});
 
 	$dialog.find('.dialog_edit_save').click(function(){
 		_this.sprite.detail($dialog.find('.dialog_edit_content').val());
 		_this.view(_this.sprite);
 
-		window.remote.updateSprite(_this.sprite.data);
+		window.net.server('updateSprite', _this.sprite.data);
 	});
 };
 
@@ -296,12 +310,14 @@ Dialog.prototype = {
 </script>
 
 <script>
-window.map = (function() {
-	var $map = $('#map'),
+//map
+var Map = function() {
+	var map,
+		$map = $('#map'),
 		$container  = $('#container'),
 		dialog = new Dialog($('#dialog'));
 
-	return {
+	map = {
 		offsetX : 0,
 		offsetY : 0,
 		addSprite : function(sprite) {
@@ -322,12 +338,38 @@ window.map = (function() {
 			$map.css('-webkit-transform', 'translate(' + (this.offsetX + dx) + 'px, ' + (this.offsetY + dy) + 'px)');
 		}
 	}
-})();
+
+	$container.mousedown(function(e){
+		if(e.target.id === 'container') {
+			var x1 = e.pageX, y1 = e.pageY, dx=0, dy=0;
+			
+			$container
+				.mousemove(function(e){
+					dx = (e.pageX - x1);
+					dy = (e.pageY - y1);
+					map.move(dx, dy);
+				})
+				.bind('mouseup mouseleave', function(e){
+					map.offsetX += dx, map.offsetY += dy;
+					$container.unbind('mousemove mouseup mouseleave');
+				});
+		}
+	});
+
+	return map;
+};
 </script>
 
 <script>
 //callback invoked by remote
-window.client = {
+window.net.client = {
+
+	init : function(data) {
+		for(var i=0;i<data.length;i++) {
+			window.net.client.addSprite(data[i]);
+		}
+	},
+
 	addSprite : function(data) {
 		if(data.id in Sprite.items){
 			Sprite.items[data.id].remove();
@@ -345,7 +387,7 @@ window.client = {
 
 	updateSprite : function(data){
 		if(data.id in Sprite.items){
-			Sprite.items[data.id].detail = data.detail;
+			Sprite.items[data.id].detail(data.detail);
 		} else {
 			this.addSprite(data);
 		}
@@ -355,10 +397,11 @@ window.client = {
 </script>
 
 <script>
-function main() {
+function init() {
 	var $body = $('body'), 
 		$container = $('#container');
-	
+	window.map = Map();
+
 	//sprite list
 	$('#list sprite').mousedown(function(e){
 		var $this = $(this),
@@ -375,40 +418,24 @@ function main() {
 			})
 			.mouseup(function(e){	
 				var coff = $container.offset(),
-					x = e.pageX - coff.left - ($el.width()/2) - map.offsetX, 
-					y = e.pageY - coff.top - ($el.height()/2) - map.offsetY,
+					x = e.pageX - coff.left - ($el.width()/2) - window.map.offsetX, 
+					y = e.pageY - coff.top - ($el.height()/2) - window.map.offsetY,
 					sprite = Sprite.new(x, y, $el.attr('class'));
 
-				map.addSprite(sprite);
+				window.map.addSprite(sprite);
 				$el.remove();
 				$body.unbind('mousemove mouseup');
 				$container.unbind('mouseup');
 
-				window.remote.addSprite(sprite.data);
+				window.net.server('addSprite', sprite.data);
 			});
-	});
-
-	//map
-	$container.mousedown(function(e){
-		if(e.target.id === 'container') {
-			var x1 = e.pageX, y1 = e.pageY, dx=0, dy=0;
-			
-			$container
-				.mousemove(function(e){
-					dx = (e.pageX - x1);
-					dy = (e.pageY - y1);
-					map.move(dx, dy);
-				})
-				.bind('map mouseup mouseleave', function(e){
-					map.offsetX += dx, map.offsetY += dy;
-					$container.unbind('mousemove mouseup mouseleave');
-				});
-		}
 	});
 }
 
 $(function(){
-	main();
+	window.net.connect(function(){
+		init();
+	});
 });
 
 </script>
