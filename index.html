@@ -36,6 +36,7 @@ body {
 	border: 1px solid #cbcbcb;
 	margin-top:10px;
 	overflow: auto;
+	height: 500px;
 }
 
 #list > sprite {
@@ -157,6 +158,7 @@ body {
 	</div>
 </div>
 <script>
+//network lib
 window.net = (function(){
 	var sockjs, 
 		obj;
@@ -418,16 +420,19 @@ function init() {
 			})
 			.mouseup(function(e){	
 				var coff = $container.offset(),
-					x = e.pageX - coff.left - ($el.width()/2) - window.map.offsetX, 
-					y = e.pageY - coff.top - ($el.height()/2) - window.map.offsetY,
-					sprite = Sprite.new(x, y, $el.attr('class'));
+					x = e.pageX - coff.left - ($el.width()/2), 
+					y = e.pageY - coff.top - ($el.height()/2);
 
-				window.map.addSprite(sprite);
+				if(x >=0 && y >=0 && x <= $container.width() && y <= $container.height()) {
+					var sprite = Sprite.new(x- window.map.offsetX, y- window.map.offsetY, $el.attr('class'));
+
+					window.map.addSprite(sprite);
+					window.net.server('addSprite', sprite.data);
+				}
+
 				$el.remove();
 				$body.unbind('mousemove mouseup');
 				$container.unbind('mouseup');
-
-				window.net.server('addSprite', sprite.data);
 			});
 	});
 }
