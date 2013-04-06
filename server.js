@@ -5,6 +5,7 @@ var http = require('http')
 var users = Object.create(null)
 var sprites = Object.create(null)
 var handlers = Object.create(null)
+var REMOVE_HTML_TAG = /<[^>]*?>/g
 var database = {
 	addSprite : function(){},
 	removeSprite : function(){},
@@ -13,8 +14,16 @@ var database = {
 		callback([])
 	},
 	search : function(keyword, callback){
-		//todo: in memory search
-		callback([])
+		var result = [], regex = new RegExp(keyword);
+		for(var key in sprites){			
+			var sprite = sprites[key], 
+				text = sprite.detail ? sprite.detail.replace(REMOVE_HTML_TAG, '') : '';
+
+			if(regex.test(text)) {
+				result.push({id:sprite.id, className:sprite.className, text:text});
+			}
+		}
+		callback(result);
 	}
 }
 
@@ -79,7 +88,7 @@ MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
 	database = {
 		addSprite : function(data){
 			if(data.detail) {
-				data.text = data.detail.replace(/<[^>]*?>/g, '')
+				data.text = data.detail.replace(REMOVE_HTML_TAG, '')
 			}
 			collection.insert(data, function(err){
 				if(err) {
@@ -97,7 +106,7 @@ MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
 		},
 		updateSprite : function(data){
 			if(data.detail) {
-				data.text = data.detail.replace(/<[^>]*?>/g, '')
+				data.text = data.detail.replace(REMOVE_HTML_TAG, '')
 			}
 			collection.update({id:data.id}, {$set:{detail:data.detail, text:data.text}}, function(err){
 				if(err) {
@@ -116,7 +125,7 @@ MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
 				})
 		},
 		search : function(keyword, callback) {
-			if(!keyword){return callback([])}
+			if(!keyword || keyword.length < 2){return callback([])}
 			collection
 				.find({text:new RegExp(keyword)}, {id:1, className:1, text:1, _id : 0})
 				.toArray(function(err, items){

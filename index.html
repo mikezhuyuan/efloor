@@ -39,13 +39,13 @@ body {
 	height: 500px;
 }
 
-#list > sprite {
+#list_sprites sprite {
 	margin:10px;
 	float:left;
 	cursor: pointer;
 }
 
-#list > sprite:hover{
+#list_sprites sprite:hover{
 	outline: 1px solid #cbcbcb;
 }
 </style>
@@ -107,6 +107,48 @@ body {
 }
 </style>
 
+<style>
+/*search*/
+#search_form{
+	position:relative;
+	margin-bottom:10px;
+	overflow:auto
+}
+
+#search_txt{
+	width:195px;
+	height:16px;
+}
+
+#search_ok{
+	float:right;
+}
+
+#search_clear{
+	float:right;
+}
+
+#search_result .item{
+	border-bottom:1px solid #cbcbcb;
+	height:52px;
+	padding:5px;
+	over-flow:hidden; 
+	cursor:pointer;
+}
+
+#search_result .item_icon{
+	float:left;
+	width:48px;
+	height:48px;
+	margin-right:5px;
+	border:1px solid #cbcbcb;
+}
+
+#search_result .item_content{
+	float:left; width:180px
+}
+</style>
+
 <script src="jquery.js" type="text/javascript"></script>
 <script src="sockjs.js"></script>
 
@@ -116,23 +158,32 @@ body {
 <h1>EFloor</h1>
 
 <div id="panel">
-	<div>
-		<button style="float:right" id="search">Search</button>
-		<input style="width:70%" type="text" />
-	</div>
-	<div id="list">	
-		<sprite class="class1"></sprite>
-		<sprite class="class2"></sprite>
-		<sprite class="class3"></sprite>
-		<sprite class="class1"></sprite>
-		<sprite class="class2"></sprite>
-		<sprite class="class3"></sprite>
-		<sprite class="class1"></sprite>
-		<sprite class="class2"></sprite>
-		<sprite class="class3"></sprite>
-		<sprite class="class1"></sprite>
-		<sprite class="class2"></sprite>
-		<sprite class="class3"></sprite>
+	<form id="search_form">
+		<button id="search_clear" type="reset">C</button>
+		<button id="search_ok" type="submit">S</button>
+		<input id="search_txt" type="text">
+	</form>
+	<div id="list">
+		<div id="list_sprites">
+			<sprite class="class1"></sprite>
+			<sprite class="class2"></sprite>
+			<sprite class="class3"></sprite>
+			<sprite class="class1"></sprite>
+			<sprite class="class2"></sprite>
+			<sprite class="class3"></sprite>
+			<sprite class="class1"></sprite>
+			<sprite class="class2"></sprite>
+			<sprite class="class3"></sprite>
+			<sprite class="class1"></sprite>
+			<sprite class="class2"></sprite>
+			<sprite class="class3"></sprite>
+		</div>
+		<div id="search_result" style="display:none">
+			<div class="item">
+				<div class="item_icon"></div>
+				<div class="item_content"></div>
+			</div>
+		</div>
 	</div>
 </div>
 <div id="container">
@@ -235,6 +286,12 @@ Sprite.prototype = {
 		}
 
 		return this.data.detail;
+	},
+	center: function(){
+		return {
+			x:this.data.x+this.$el.width()/2,
+			y:this.data.y+this.$el.height()/2
+		}
 	}
 };
 
@@ -245,6 +302,7 @@ Sprite.prototype = {
 var Dialog = function($dialog){
 	var _this = this;
 	this.$dialog = $dialog;
+	this.map = map;
 	$dialog.find('.dialog_header_close').click(function(e){
 		_this.close();
 		e.preventDefault();
@@ -272,13 +330,13 @@ Dialog.prototype = {
 			dh = this.$dialog.height(),
 			sw = sprite.$el.width(),
 			sh = sprite.$el.height(),
-			sx = sprite.$el.position().left,
-			sy = sprite.$el.position().top;
+			sx = sprite.data.x,
+			sy = sprite.data.y;
 
 		this.sprite = sprite;
 		this.$dialog.css({
-			left: sx + (sw - dw) / 2 - window.map.offsetX,
-			top: sy - dh - 10 - window.map.offsetY
+			left: sx + (sw - dw) / 2,
+			top: sy - dh - 10 
 		});
 	},
 
@@ -315,9 +373,11 @@ Dialog.prototype = {
 //map
 var Map = function() {
 	var map,
+		dialog = new Dialog($('#dialog')),
 		$map = $('#map'),
 		$container  = $('#container'),
-		dialog = new Dialog($('#dialog'));
+		width = $container.width(),
+		height = $container.height();
 
 	map = {
 		offsetX : 0,
@@ -338,7 +398,13 @@ var Map = function() {
 		},
 		move : function(dx, dy){
 			$map.css('-webkit-transform', 'translate(' + (this.offsetX + dx) + 'px, ' + (this.offsetY + dy) + 'px)');
-		}
+		},
+		center : function(point){
+			this.offsetX = (width/2-point.x);
+			this.offsetY = (height/2-point.y);
+			$map.css('-webkit-transform', 'translate(' + this.offsetX + 'px, ' + this.offsetY + 'px)');
+		},
+		dialog : dialog
 	}
 
 	$container.mousedown(function(e){
@@ -363,46 +429,50 @@ var Map = function() {
 </script>
 
 <script>
-//callback invoked by remote
-window.net.client = {
+var Search = function(map){
+	var $search_form = $('#search_form'),
+		$search_ok = $('#search_ok'),
+		$search_clear = $('#search_clear'),
+		$search_txt = $('#search_txt'),
+		$search_result = $('#search_result'),
+		$list_sprites = $('#list_sprites');
 
-	init : function(data) {
-		for(var i=0;i<data.length;i++) {
-			window.net.client.addSprite(data[i]);
-		}
-	},
+	$search_form.submit(function(){
+		var query = $search_txt.val();
+		$.get('/search', {q:query}, function(data){
+			if(data && data.length) {
+				$search_result.empty();
+				for(var i=0;i<data.length;i++){
+					var item = data[i],
+						sprite = Sprite.items[item.id],
+						el = $('<div class="item"><div class="item_icon"></div><div class="item_content">' + item.text + '</div></div>');
+					(function(sprite){
+						el.click(function(){
+							map.center(sprite.center());
+							map.dialog.view(sprite)
+						});
+					})(sprite);
 
-	addSprite : function(data) {
-		if(data.id in Sprite.items){
-			Sprite.items[data.id].remove();
-		}
+					$search_result.append(el);
+				}
+				$list_sprites.hide();
+				$search_result.show();
+			}
+		}, 'json');
 
-		var sprite = Sprite.create(data);
-		window.map.addSprite(sprite);
-	},
+		return false;
+	});
 
-	removeSprite : function(id) {
-		if(id in Sprite.items){
-			Sprite.items[id].remove();
-		}
-	},
-
-	updateSprite : function(data){
-		if(data.id in Sprite.items){
-			Sprite.items[data.id].detail(data.detail);
-		} else {
-			this.addSprite(data);
-		}
-	}
+	$search_clear.click(function(){
+		$list_sprites.show();
+		$search_result.hide();
+	});
 };
-
 </script>
-
 <script>
-function init() {
+var SpriteList = function(map) {
 	var $body = $('body'), 
-		$container = $('#container');
-	window.map = Map();
+		$container = $('#container')
 
 	//sprite list
 	$('#list sprite').mousedown(function(e){
@@ -424,9 +494,9 @@ function init() {
 					y = e.pageY - coff.top - ($el.height()/2);
 
 				if(x >=0 && y >=0 && x <= $container.width() && y <= $container.height()) {
-					var sprite = Sprite.new(x- window.map.offsetX, y- window.map.offsetY, $el.attr('class'));
+					var sprite = Sprite.new(x- map.offsetX, y- map.offsetY, $el.attr('class'));
 
-					window.map.addSprite(sprite);
+					map.addSprite(sprite);
 					window.net.server('addSprite', sprite.data);
 				}
 
@@ -435,12 +505,55 @@ function init() {
 				$container.unbind('mouseup');
 			});
 	});
+};
+</script>
+<script>
+function init() {
+	var map = Map(),
+		list = SpriteList(map),
+		search = new Search(map);
+
+	window.net.client = {
+
+		init : function(data) {
+			for(var i=0;i<data.length;i++) {
+				window.net.client.addSprite(data[i]);
+			}
+		},
+
+		addSprite : function(data) {
+			if(data.id in Sprite.items){
+				Sprite.items[data.id].remove();
+			}
+
+			var sprite = Sprite.create(data);
+			map.addSprite(sprite);
+		},
+
+		removeSprite : function(id) {
+			if(id in Sprite.items){
+				Sprite.items[id].remove();
+			}
+		},
+
+		updateSprite : function(data){
+			if(data.id in Sprite.items){
+				Sprite.items[data.id].detail(data.detail);
+			} else {
+				this.addSprite(data);
+			}
+		}
+	};
 }
 
 $(function(){
-	window.net.connect(function(){
-		init();
-	});
+	if(/chrome/i.test(navigator.userAgent)) {
+		window.net.connect(function(){
+			init();
+		});
+	} else {
+		alert('Sorry, efloor is in beta version which only supports Chrome.');
+	}
 });
 
 </script>
