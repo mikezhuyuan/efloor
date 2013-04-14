@@ -95,7 +95,8 @@ var Sprite = function(data){
         _this.remove();
         window.net.server('removeSprite', data.id);
     });
-    this.setPosition(data.x, data.y);
+
+    this.setPosition(data.detail.x, data.detail.y);
 };
 
 Sprite.items = Object.create(null);
@@ -107,10 +108,10 @@ Sprite.new = function(type, x, y) {
     //TODO: handle person & meeting room
     return new Sprite({
         id:id,
-        x:x,
-        y:y,
         type:type,
         detail : {
+            x:x,
+            y:y,
             title:"Title..",
             img:"images/person.png",
             team:"Team..",
@@ -127,7 +128,7 @@ Sprite.create = function(data) {
 
 Sprite.prototype = {
     setPosition:function(x, y){
-        this.$el.css({left: x - 40/2, top: y - 40/2});
+        this.$el.css({left: x - 18, top: y - 18});
     },
     remove : function(){
         delete Sprite.items[this.id];
@@ -137,10 +138,17 @@ Sprite.prototype = {
     },
     update: function(field,val){
         if(val === undefined) {
-            var data = field, updated = false;
+            var data = field, updated = false, reposition = false;
             for(var field in data) {
-                if(this.updateField(field, data[field]))
+                if(this.updateField(field, data[field])) {
+                    if(field === 'x' || field === 'y')
+                        reposition = true;
                     updated = true;
+                }
+            }
+
+            if(reposition) {
+                this.setPosition(data.x, data.y);
             }
 
             return updated;
@@ -166,9 +174,15 @@ Sprite.prototype = {
             s.$el.qtip("hide");
         });
         return {
-            x:this.data.x+this.$el.width()/2,
-            y:this.data.y+this.$el.height()/2
+            x:this.x()+this.$el.width()/2,
+            y:this.y()+this.$el.height()/2
         }
+    },
+    x: function(){
+        return this.data.detail.x;
+    },
+    y: function(){
+        return this.data.detail.y;
     }
 };
 
@@ -176,22 +190,25 @@ var Legend = function(elemLegend, map) {
     var _this = this;
     this.el = elemLegend;
     this.map = map;
+
     this.el.addEventListener("dragend", function(e){
         _this.drop(e);
     });
 };
 
 Legend.prototype.drop = function(e){
-    var matrix = $('#map').css("-webkit-transform")
-        , vals = matrix.match(/-?\d+/g)
-        , offsetLeft = vals && vals[4] ? parseInt(vals[4], 10) : 0
-        , offsetTop = vals && vals[5] ? parseInt(vals[5], 10) : 0;
+    var offsetLeft = this.map.offsetX,
+        offsetTop = this.map.offsetY;
 
     var sprite = Sprite.new(
         $(this.el).attr("data-type"),
         e.x - offsetLeft, 
-        e.y - $(".header").outerHeight() - offsetTop);
+        e.y - offsetTop);
 
     this.map.addSprite(sprite);
     window.net.server('addSprite', sprite.data);
 };
+
+document.getElementById('container').addEventListener('dragover', function(e){
+    e.preventDefault();
+});

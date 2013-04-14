@@ -109,7 +109,7 @@ MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
 		},
 		loadSprites : function(callback){
 			collection
-				.find({}, {id:1, x:1, y:1, type:1, detail:1, _id : 0})
+				.find({}, {id:1, type:1, detail:1, _id : 0})
 				.toArray(function(err, items){
 					if(err) {
 						return console.log(err)

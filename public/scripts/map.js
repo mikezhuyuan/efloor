@@ -61,9 +61,14 @@ var Map = function($container, bkImgUrl) {
         offsetY : 0,
         addSprite : function(sprite) {
             $sprites.append(sprite.$el);
+            sprite.$el[0].addEventListener('dragend', function(e){
+                if(sprite.update({x:e.x, y:e.y})){
+                    window.net.server('updateSprite', sprite.data);
+                }
+            });
         },
         move : function(x, y){
-            this.offsetX = x, this.offsetY = y;
+            this.offsetX = (x || 0), this.offsetY = (y || 0);
 
             drawBackground(-x, -y);
             $sprites.css('-webkit-transform', 'translate(' + x + 'px, ' + y + 'px)');
@@ -107,7 +112,7 @@ var Map = function($container, bkImgUrl) {
         }
     });
 
-    window.onresize = function(){
+    window.onresize = function(){        
         drawBackground(map.offsetX, map.offsetY);
     };
 
