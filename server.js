@@ -16,11 +16,10 @@ var database = {
 	search : function(keyword, callback){
 		var result = [], regex = new RegExp(keyword);
 		for(var key in sprites){			
-			var sprite = sprites[key], 
-				text = sprite.detail ? sprite.detail.replace(REMOVE_HTML_TAG, '') : '';
+			var sprite = sprites[key];
 
-			if(regex.test(text)) {
-				result.push({id:sprite.id, className:sprite.className, text:text});
+			if(regex.test(sprite.detail.name)) {
+				result.push({id:sprite.id, className:sprite.className, detail: sprite.detail});
 			}
 		}
 		callback(result);
@@ -87,9 +86,6 @@ MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
 	var collection = db.collection('sprites');
 	database = {
 		addSprite : function(data){
-			if(data.detail) {
-				data.text = data.detail.replace(REMOVE_HTML_TAG, '')
-			}
 			collection.insert(data, function(err){
 				if(err) {
 					return console.log(err)
@@ -105,10 +101,7 @@ MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
 			})
 		},
 		updateSprite : function(data){
-			if(data.detail) {
-				data.text = data.detail.replace(REMOVE_HTML_TAG, '')
-			}
-			collection.update({id:data.id}, {$set:{detail:data.detail, text:data.text}}, function(err){
+			collection.update({id:data.id}, {$set:{detail:data.detail}}, function(err){
 				if(err) {
 					return console.log(err)
 				}
@@ -127,7 +120,7 @@ MongoClient.connect("mongodb://localhost:27017/efloor", function(err, db) {
 		search : function(keyword, callback) {
 			if(!keyword || keyword.length < 2){return callback([])}
 			collection
-				.find({text:new RegExp(keyword)}, {id:1, className:1, text:1, _id : 0})
+				.find({"detail.name": new RegExp(keyword,"i")}, {id:1, className:1, detail:1, _id : 0})
 				.toArray(function(err, items){
 					if(err) {
 						callback([])
