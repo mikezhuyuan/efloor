@@ -30,6 +30,7 @@
     </div>
 </div>
 <div id="container">
+    <canvas id="background"></canvas>
     <div id="map"></div>
     <div id="search_result" class="search-result">
         <a class="search-switch"><em></em></a>
@@ -103,17 +104,14 @@
 <script src="scripts/search.js" type="text/javascript"></script>
 <script>
     function init() {
-        var map = Map(),
-                search = new Search(map);
-        $("#container").height($(document).height() - $(".header").outerHeight());
-
-
+        var map = Map($('#container'), '/images/bg.png'),
+            search = new Search(map);
+        
         _.each($("#list sprite"), function(elemSprite) {
             new Legend(elemSprite, map);
         });
 
         window.net.client = {
-
             init : function(data) {
                 for(var i=0;i<data.length;i++) {
                     window.net.client.addSprite(data[i]);
@@ -144,6 +142,7 @@
             }
         };
     }
+
     $(function(){
         if(/chrome/i.test(navigator.userAgent)) {
             window.net.connect(function(){

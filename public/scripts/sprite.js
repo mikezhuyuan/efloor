@@ -144,6 +144,7 @@ var Legend = function(elemLegend, map) {
         _this.drop(e);
     });
 };
+
 Legend.prototype.drop = function(e){
     var matrix = $('#map').css("-webkit-transform")
         , vals = matrix.match(/-?\d+/g)

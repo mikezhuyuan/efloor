@@ -1,44 +1,114 @@
-var Map = function() {
+var Map = function($container, bkImgUrl) {
     var map,
-        $map = $('#map'),
-        $container  = $('#container'),
-        width = $container.width(),
-        height = $container.height();
+        $sprites = $container.find('#map'),
+        $background = $container.find('#background'),
+        context = $background[0].getContext('2d'),
+        bkImage = new Image(),
+        bkImgLoaded = false;
+
+    bkImage.src = bkImgUrl;
+    bkImage.onload = function(){
+        bkImgLoaded = true;
+        drawBackground(0, 0);
+    };
+
+    function drawBackground(x, y) {
+        if(!bkImgLoaded)
+            return;
+
+        var width = $container.width(), 
+            height = $container.height();
+        
+        if($background.width() != width)
+            //$background.width(width); TODO: ? why not work
+            $background[0].width = width;
+
+        if($background.height() != height)
+            //$background.height(height);
+            $background[0].height = height;
+
+        context.clearRect(0, 0, width, height);
+        var sx = x, sy = y, sw = width, sh = height, 
+            dx = 0, dy = 0, dw = width, dh = height;
+
+        if(x < 0) {
+            sx = 0;
+            sw = width + x;
+            dx = -x;
+            dw = width + x;
+        }
+
+        if(y < 0) {
+            sy = 0;
+            sh = height + y;
+            dy = -y;
+            dh = height + y;
+        }
+
+        if(x + width > bkImage.width) {
+            dw = sw = bkImage.width - x;
+        }
+
+        if(y + height > bkImage.height) {
+            dh = sh = bkImage.height - y;
+        }
+
+        context.drawImage(bkImage, sx, sy, sw, sh, dx, dy, dw, dh);
+    }
 
     map = {
         offsetX : 0,
         offsetY : 0,
         addSprite : function(sprite) {
-            sprite.$el.appendTo($map);
+            $sprites.append(sprite.$el);
         },
-        move : function(dx, dy){
-            var x = this.offsetX + dx, y = this.offsetY + dy;
-            $container.css('background-position',x  + 'px ' + y + 'px');
-            $map.css('-webkit-transform', 'translate(' + x + 'px, ' + y + 'px)');
+        move : function(x, y){
+            this.offsetX = x, this.offsetY = y;
+
+            drawBackground(-x, -y);
+            $sprites.css('-webkit-transform', 'translate(' + x + 'px, ' + y + 'px)');
         },
         center : function(point){
+            var width = $container.width(),
+                height = $container.height();
+
             this.offsetX = (width/2-point.x);
             this.offsetY = (height/2-point.y);
-            $map.css('-webkit-transform', 'translate(' + this.offsetX + 'px, ' + this.offsetY + 'px)');
+
+            $sprites.css('-webkit-transform', 'translate(' + this.offsetX + 'px, ' + this.offsetY + 'px)');
         }
     }
 
     $container.mousedown(function(e){
         if(e.target.id === 'container') {
-            var x1 = e.pageX, y1 = e.pageY, dx=0, dy=0;
+            $container.addClass('drag');
+            var x1 = e.pageX, y1 = e.pageY, mx = map.offsetX, my = map.offsetY, x, y, moving = false;
 
             $container
                 .mousemove(function(e){
-                    dx = (e.pageX - x1);
-                    dy = (e.pageY - y1);
-                    map.move(dx, dy);
+                    x = mx + (e.pageX - x1),
+                    y = my + (e.pageY - y1);
+                    if(!moving) {
+                        moving = true;
+                        webkitRequestAnimationFrame(function(){
+                            map.move(x, y);
+                            if(moving){
+                                webkitRequestAnimationFrame(arguments.callee);
+                            }
+                        });
+                    }
                 })
                 .bind('mouseup mouseleave', function(e){
-                    map.offsetX += dx, map.offsetY += dy;
+                    moving = false;
+                    $container.removeClass('drag');
                     $container.unbind('mousemove mouseup mouseleave');
                 });
         }
     });
+
+    window.onresize = function(){
+        drawBackground(map.offsetX, map.offsetY);
+    };
 
     return map;
 };
