@@ -1,9 +1,17 @@
-var Sprite = function(data){
-    var _this = this;
-    this.data = data;
-    Sprite.items[this.id = this.data.id] = this;
-    this.$el = $(Sprite.tempSprite(this.data));
-    this.$el.qtip({
+var Tip = function(sprite) {
+    var _this = sprite;
+    function updateSprite(sprite, $field) {
+        var field = $field.attr("field"), val;
+        if(field === 'img')
+            val = $field.val();
+        else
+            val = $field.html();
+
+        if(sprite.updateField(field, val)){
+            window.net.server('updateSprite', sprite.data);
+        }
+    }
+    return {
         content: {
             text: function(){
                 var $elemTip = $(Sprite.tmplOverlay(_this.data))
@@ -18,7 +26,7 @@ var Sprite = function(data){
                 $details.keypress(function(e){
                     var $field = $(this);
                     if(e.keyCode === 13){
-                        _this.update($field.attr("field"), $field.html());
+                        updateSprite(_this, $field);
                         $field.blur();
                         $field.addClass("profile-editing");
                         $field.mousemove(function(){
@@ -30,17 +38,18 @@ var Sprite = function(data){
                 });
                 $details.blur(function(){
                     var $field = $(this);
-                    _this.update($field.attr("field"), $field.html());
+                    updateSprite(_this, $field);
                 });
                 //avatar
                 $avatar.click(function(){
                     var $field = $(this);
                     $field.addClass("profile-editing");
+                    $avatarUrl.val($avatarImg.attr("src"));
                 });
                 $avatarUrl.keypress(function(e){
-                    var $field = $(this), val = $field.html();
+                    var $field = $(this), val = $field.val();
                     if(e.keyCode === 13){
-                        _this.update($field.attr("field"), val);
+                        updateSprite(_this, $field);
                         $field.blur();
                         $avatarImg.attr("src", val);
                         $avatar.removeClass("profile-editing");
@@ -48,7 +57,7 @@ var Sprite = function(data){
                     }
                 });
                 $avatarUrl.blur(function(e){
-                    var $field = $(this), val = $field.html();
+                    var $field = $(this), val = $field.val();
                     _this.update($field.attr("field"),val);
                     $avatarImg.attr("src", val);
                     $avatar.removeClass("profile-editing");
@@ -71,7 +80,17 @@ var Sprite = function(data){
         position: {
             container: $("#map")
         }
-    });
+    };
+}
+
+var Sprite = function(data){
+    var _this = this;
+    this.data = data;
+    this.type = data.type;
+    
+    Sprite.items[this.id = this.data.id] = this;
+    this.$el = $(Sprite.tempSprite(this.data));
+    this.$el.qtip(Tip(this));
     this.$el.find(".delete-sprite-button").click(function(){
         _this.remove();
         window.net.server('removeSprite', data.id);
@@ -79,20 +98,25 @@ var Sprite = function(data){
     this.setPosition(data.x, data.y);
 };
 
-Sprite.new = function(x, y, className) {
+Sprite.items = Object.create(null);
+Sprite.tempSprite = _.template($("#tmplSprite").html());
+Sprite.tmplOverlay  = _.template($("#tmplOverlay").html());
+
+Sprite.new = function(type, x, y) {
     var id = parseInt(Math.random() * 1000000000);
+    //TODO: handle person & meeting room
     return new Sprite({
         id:id,
         x:x,
         y:y,
-        className:className,
-        detail:{
+        type:type,
+        detail : {
             title:"Title..",
             img:"images/person.png",
             team:"Team..",
             name:"Name..",
             from:"From..",
-            content:"Hello.."
+            desc:"Hello.."
         }
     });
 }
@@ -100,11 +124,6 @@ Sprite.new = function(x, y, className) {
 Sprite.create = function(data) {
     return new Sprite(data);
 }
-
-Sprite.items = Object.create(null);
-
-Sprite.tempSprite = _.template($("#tmplSprite").html());
-Sprite.tmplOverlay  = _.template($("#tmplOverlay").html());
 
 Sprite.prototype = {
     setPosition:function(x, y){
@@ -117,11 +136,29 @@ Sprite.prototype = {
         this.data = null;
     },
     update: function(field,val){
-        if(field && val && this.data.detail[field] !== val){
-            this.data.detail[field] = val;
-            window.net.server('updateSprite', this.data);
+        if(val === undefined) {
+            var data = field, updated = false;
+            for(var field in data) {
+                if(this.updateField(field, data[field]))
+                    updated = true;
+            }
+
+            return updated;
+        } else {
+            return this.updateField(field, val);
         }
-        return this.data.detail;
+    },
+    updateField : function(field, val){
+        if(field && val && this.data.detail[field] != val){
+            this.data.detail[field] = val;
+            if(field == 'img') {
+                this.$el.css('background-image', 'url('+val+')');
+            }
+
+            return true;
+        }
+        
+        return false;
     },
     center: function(){
         //close all tips
@@ -135,7 +172,6 @@ Sprite.prototype = {
     }
 };
 
-
 var Legend = function(elemLegend, map) {
     var _this = this;
     this.el = elemLegend;
@@ -148,9 +184,14 @@ var Legend = function(elemLegend, map) {
 Legend.prototype.drop = function(e){
     var matrix = $('#map').css("-webkit-transform")
         , vals = matrix.match(/-?\d+/g)
-        , offsetLeft = vals && vals[4] ? parseInt(vals[4],10) : 0
-        , offsetTop = vals && vals[5] ? parseInt(vals[5],10) : 0;
-    var sprite = Sprite.new(e.x - offsetLeft, e.y - $(".header").outerHeight() - offsetTop, $(this.el).attr("class"));
+        , offsetLeft = vals && vals[4] ? parseInt(vals[4], 10) : 0
+        , offsetTop = vals && vals[5] ? parseInt(vals[5], 10) : 0;
+
+    var sprite = Sprite.new(
+        $(this.el).attr("data-type"),
+        e.x - offsetLeft, 
+        e.y - $(".header").outerHeight() - offsetTop);
+
     this.map.addSprite(sprite);
     window.net.server('addSprite', sprite.data);
 };

@@ -75,6 +75,7 @@ var Map = function($container, bkImgUrl) {
             this.offsetX = (width/2-point.x);
             this.offsetY = (height/2-point.y);
 
+            drawBackground(-this.offsetX, -this.offsetY);
             $sprites.css('-webkit-transform', 'translate(' + this.offsetX + 'px, ' + this.offsetY + 'px)');
         }
     }
