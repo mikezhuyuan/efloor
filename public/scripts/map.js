@@ -119,8 +119,9 @@ var Map = function($container, bkImgUrl) {
         }
     });
 
-    window.onresize = function(){        
-        drawBackground(map.offsetX, map.offsetY);
+    window.onresize = function(e){
+        console.log(e);        
+        map.move(map.offsetX, map.offsetY);
     };
 
     return map;
