@@ -107,6 +107,7 @@
         };
     })();
 </script>
+<script src="scripts/hash.js" type="text/javascript"></script>
 <script src="scripts/tip.js" type="text/javascript"></script>
 <script src="scripts/sprite.js" type="text/javascript"></script>
 <script src="scripts/map.js" type="text/javascript"></script>
@@ -120,11 +121,19 @@
             new Legend(elemSprite, map);
         });
 
+        Hash.register('id', function(id){
+            var sprite = Sprite.items[parseInt(id)];
+            map.center(sprite.center());
+            sprite.$el.qtip("show").css();
+        });
+        
         window.net.client = {
             init : function(data) {
                 for(var i=0;i<data.length;i++) {
                     window.net.client.addSprite(data[i]);
                 }
+
+                Hash.init();
             },
 
             addSprite : function(data) {
