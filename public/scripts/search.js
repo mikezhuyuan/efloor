@@ -28,7 +28,8 @@ var Search = function(map){
                         })(sprite);
                     $search_result_list.append(el);
                 }
-                $search_result.show();
+                $search_result.css({marginLeft:0}).show();
+                $searchSwitch.removeClass("search-switch-show");
             }
             else{
                 $search_result.hide();
@@ -44,7 +45,7 @@ var Search = function(map){
         $(this).toggleClass(cls);
         if($(this).hasClass(cls)){
             $search_result.animate({
-                marginLeft: -200
+                marginLeft: -180
             });
         }
         else{
