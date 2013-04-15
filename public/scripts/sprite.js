@@ -89,7 +89,7 @@ var Sprite = function(data){
     this.type = data.type;
     
     Sprite.items[this.id = this.data.id] = this;
-    this.$el = $(Sprite.tempSprite(this.data));
+    this.$el = $(Sprite.tmplSprite(this.data));
     this.$el.qtip(Tip(this));
     this.$el.find(".delete-sprite-button").click(function(){
         _this.remove();
@@ -100,7 +100,7 @@ var Sprite = function(data){
 };
 
 Sprite.items = Object.create(null);
-Sprite.tempSprite = _.template($("#tmplSprite").html());
+Sprite.tmplSprite = _.template($("#tmplSprite").html());
 Sprite.tmplOverlay  = _.template($("#tmplOverlay").html());
 
 Sprite.new = function(type, x, y) {
@@ -191,24 +191,20 @@ var Legend = function(elemLegend, map) {
     this.el = elemLegend;
     this.map = map;
 
-    this.el.addEventListener("dragend", function(e){
-        _this.drop(e);
+    $(this.el).draggable({ 
+        containment: 'document', 
+        opacity: 0.7, 
+        helper: "clone", 
+        addClasses: false, 
+        appendTo:'body',
+        stop : function(e){
+            var sprite = Sprite.new(
+                $(_this.el).attr("data-type"),
+                e.pageX - _this.map.offsetX, 
+                e.pageY - _this.map.offsetY);
+
+            _this.map.addSprite(sprite);
+            window.net.server('addSprite', sprite.data);
+        }
     });
 };
-
-Legend.prototype.drop = function(e){
-    var offsetLeft = this.map.offsetX,
-        offsetTop = this.map.offsetY;
-
-    var sprite = Sprite.new(
-        $(this.el).attr("data-type"),
-        e.x - offsetLeft, 
-        e.y - offsetTop);
-
-    this.map.addSprite(sprite);
-    window.net.server('addSprite', sprite.data);
-};
-
-document.getElementById('container').addEventListener('dragover', function(e){
-    e.preventDefault();
-});

@@ -61,9 +61,16 @@ var Map = function($container, bkImgUrl) {
         offsetY : 0,
         addSprite : function(sprite) {
             $sprites.append(sprite.$el);
-            sprite.$el[0].addEventListener('dragend', function(e){
-                if(sprite.update({x:e.x, y:e.y})){
-                    window.net.server('updateSprite', sprite.data);
+            sprite.$el.draggable({ 
+                containment: $container, 
+                opacity: 0.7, 
+                helper: "clone", 
+                addClasses: false, 
+                appendTo:'body',
+                stop : function(e){
+                    if(sprite.update({x:e.pageX - map.offsetX, y:e.pageY - map.offsetY})){
+                        window.net.server('updateSprite', sprite.data);
+                    }
                 }
             });
         },

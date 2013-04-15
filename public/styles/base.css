@@ -474,3 +474,6 @@ html{
     border:1px solid #873b33;
     box-shadow: none;
 }
+.ui-draggable-dragging{
+    z-index: 100;
+}
