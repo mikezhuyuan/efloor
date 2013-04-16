@@ -19,7 +19,6 @@ var Hash = (function(){
             }
         },
         init : function(){
-            console.log('init');
             window.onhashchange = onchange;
             onchange();
         }
