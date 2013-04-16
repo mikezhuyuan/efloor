@@ -1,9 +1,14 @@
 var Hash = (function(){
     var methods = {};
     function onchange(){
-        var parts = window.location.hash.substring(1).split('='),
-            method = parts[0], args = parts[1].split(',');
+        if(!window.location.hash.length)
+            return;
+        
+        var parts = window.location.hash.substring(1).split('=');
+        if(parts.length < 2)
+            return;
 
+        var method = parts[0], args = parts[1].split(',');
         methods[method].apply(null, args);
     }
     return {
