@@ -6,6 +6,7 @@ var Map = function($container, bkImgUrl) {
         bkImage = new Image(),
         bkImgLoaded = false;
 
+    context.webkitImageSmoothingEnabled = false;
     bkImage.src = bkImgUrl;
     bkImage.onload = function(){
         bkImgLoaded = true;

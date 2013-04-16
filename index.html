@@ -123,8 +123,10 @@
 
         Hash.register('id', function(id){
             var sprite = Sprite.items[parseInt(id)];
-            map.center(sprite.center());
-            sprite.$el.qtip("show").css();
+            if(sprite) {
+                map.center(sprite.center());
+                sprite.$el.qtip("show").css();
+            }
         });
         
         window.net.client = {
