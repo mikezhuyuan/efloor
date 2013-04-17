@@ -263,7 +263,10 @@ html{
     position:absolute;
     pointer-events: none;
 }
-
+#graph{
+    position:absolute;
+    pointer-events: none;
+}
 /*search result*/
 .search-result{
     width: 200px;

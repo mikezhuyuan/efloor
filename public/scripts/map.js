@@ -57,6 +57,47 @@ var Map = function($container, bkImgUrl) {
         context.drawImage(bkImage, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 
+    var Link = (function(){
+        var $graph = $('#graph');
+        var context = $graph[0].getContext('2d');
+        $graph[0].width = window.screen.width;
+        $graph[0].height = window.screen.height;
+
+        function showLinks(sprite){
+            var items = Sprite.items;
+            
+            for(var id in items){
+                if(id == sprite.id)
+                    continue;
+
+                var item = items[id],
+                    from = sprite.center(), 
+                    to = item.center();
+
+                if(item.data.detail.team === sprite.data.detail.team) {
+                    context.beginPath();
+                    
+                    context.moveTo(sprite.x()+map.offsetX, sprite.y()+map.offsetY);
+                    context.lineTo(item.x()+map.offsetX, item.y()+map.offsetY);
+                    context.stroke();
+                }
+            }
+        }
+
+        function clearAll(){
+            context.clearRect(0, 0, $graph.width(), $graph.height());
+        }
+
+        return function(sprite){
+            var $el = sprite.$el;
+            $el.mouseover(function(){
+                showLinks(sprite);
+            });
+
+            $el.mouseout(clearAll);
+        };
+    })();
+
     map = {
         offsetX : 0,
         offsetY : 0,
@@ -74,6 +115,7 @@ var Map = function($container, bkImgUrl) {
                     }
                 }
             });
+            Link(sprite);
         },
         move : function(x, y){
             this.offsetX = (x || 0), this.offsetY = (y || 0);
