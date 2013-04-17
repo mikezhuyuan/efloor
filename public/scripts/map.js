@@ -14,8 +14,13 @@ var Map = function($container, bkImgUrl) {
     };
 
     function drawBackground(x, y) {
-        if(!bkImgLoaded)
+        if(!bkImgLoaded){
+            bkImage.onload = function(){
+                bkImgLoaded = true;
+                drawBackground(x, y);
+            };
             return;
+        }
 
         var width = $container.width(), 
             height = $container.height();
@@ -80,7 +85,7 @@ var Map = function($container, bkImgUrl) {
         function showLinks(sprite){
             if(!sprite.data.detail.team)
                 return;
-            
+
             var items = Sprite.items;
             context.strokeStyle="#e16c5f";
             context.lineWidth = 4;
