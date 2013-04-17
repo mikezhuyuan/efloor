@@ -87,7 +87,8 @@ var Map = function($container, bkImgUrl) {
 
                 var item = items[id];
 
-                if(item.data.detail.team === sprite.data.detail.team) {
+
+                if(item.type === 'person' && item.data.detail.team === sprite.data.detail.team) {
                     drawCurve(
                         sprite.x()+map.offsetX, 
                         sprite.y()+map.offsetY,
@@ -102,11 +103,13 @@ var Map = function($container, bkImgUrl) {
         }
 
         return function(sprite){
-            sprite.$el
-                .mouseover(function(){
-                    showLinks(sprite);
-                })
-                .mouseout(clearAll);
+            if(sprite.type === 'person') {
+                sprite.$el
+                    .mouseover(function(){
+                        showLinks(sprite);
+                    })
+                    .mouseout(clearAll);
+            }
         };
     })();
 
