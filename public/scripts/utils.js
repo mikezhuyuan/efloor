@@ -6,7 +6,7 @@ window.Utils = {
         sel.removeAllRanges();
         sel.addRange(range);
     },
-    hideAllTips: function() {
+    closeAllTips: function() {
     	var items = Sprite.items;
     	for(var id in items){
     		var item = items[id];

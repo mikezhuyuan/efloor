@@ -121,6 +121,9 @@ var Map = function($container, bkImgUrl) {
                 helper: "clone", 
                 addClasses: false, 
                 appendTo:'body',
+                start: function(){
+                    Utils.closeAllTips();
+                },
                 stop : function(e){
                     if(sprite.update({x:e.pageX - map.offsetX, y:e.pageY - map.offsetY})){
                         window.net.server('updateSprite', sprite.data);

@@ -6,7 +6,7 @@ var Sprite = (function(){
         
         Sprite.items[this.id = this.data.id] = this;
         this.$el = $(Sprite.tmplSprite(this.data));
-        this.$el.click(Utils.hideAllTips);
+        this.$el.click(Utils.closeAllTips);
 
         this.$el.qtip(Tip(this));
         this.$el.find(".delete-sprite-button").click(function(){
