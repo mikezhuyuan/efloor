@@ -50,6 +50,7 @@ var Sprite = (function(){
         },
         remove : function(){
             delete Sprite.items[this.id];
+            this.$el.trigger('mouseout');
             this.$el.remove();
             this.$el = null;
             this.data = null;

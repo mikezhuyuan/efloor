@@ -79,7 +79,7 @@ var Map = function($container, bkImgUrl) {
 
         function showLinks(sprite){
             var items = Sprite.items;
-            context.strokeStyle="#ccc";
+            context.strokeStyle="#e16c5f";
             context.lineWidth = 4;
             for(var id in items){
                 if(id == sprite.id)
@@ -166,10 +166,10 @@ var Map = function($container, bkImgUrl) {
                         });
                     }
                 })
-                .bind('mouseup mouseleave', function(e){
+                .bind('mouseup mouseout', function(e){
                     moving = false;
                     $container.removeClass('drag');
-                    $container.unbind('mousemove mouseup mouseleave');
+                    $container.unbind('mousemove mouseup mouseout');
                 });
         }
     });
