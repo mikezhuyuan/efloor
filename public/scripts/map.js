@@ -64,10 +64,12 @@ var Map = function($container, bkImgUrl) {
         $graph[0].height = window.screen.height;
 
         function drawCurve(x0, y0, x1, y1){
+
             var len = Math.sqrt(((x0-x1)*(x0-x1) + (y0-y1)*(y0-y1))),
                 t = Math.PI - Math.acos((x1-x0)/len),
-                x = (x0+x1)/2+len*.2*Math.sin(t),
-                y = (y0+y1)/2+len*.2*Math.cos(t);
+                d = (x0<x1 ? 1 : -1);
+                x = (x0+x1)/2+d*len*.3*Math.sin(t),
+                y = (y0+y1)/2+d*len*.3*Math.cos(t);
 
             context.beginPath();
             context.moveTo(x0, y0);
