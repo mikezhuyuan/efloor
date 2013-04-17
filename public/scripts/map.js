@@ -63,23 +63,34 @@ var Map = function($container, bkImgUrl) {
         $graph[0].width = window.screen.width;
         $graph[0].height = window.screen.height;
 
+        function drawCurve(x0, y0, x1, y1){
+            var len = Math.sqrt(((x0-x1)*(x0-x1) + (y0-y1)*(y0-y1))),
+                t = Math.PI - Math.acos((x1-x0)/len),
+                x = (x0+x1)/2+len*.2*Math.sin(t),
+                y = (y0+y1)/2+len*.2*Math.cos(t);
+
+            context.beginPath();
+            context.moveTo(x0, y0);
+            context.quadraticCurveTo(x, y, x1, y1);
+            context.stroke();
+        }
+
         function showLinks(sprite){
             var items = Sprite.items;
-            
+            context.strokeStyle="#ccc";
+            context.lineWidth = 4;
             for(var id in items){
                 if(id == sprite.id)
                     continue;
 
-                var item = items[id],
-                    from = sprite.center(), 
-                    to = item.center();
+                var item = items[id];
 
                 if(item.data.detail.team === sprite.data.detail.team) {
-                    context.beginPath();
-                    
-                    context.moveTo(sprite.x()+map.offsetX, sprite.y()+map.offsetY);
-                    context.lineTo(item.x()+map.offsetX, item.y()+map.offsetY);
-                    context.stroke();
+                    drawCurve(
+                        sprite.x()+map.offsetX, 
+                        sprite.y()+map.offsetY,
+                        item.x()+map.offsetX, 
+                        item.y()+map.offsetY);
                 }
             }
         }
@@ -89,12 +100,11 @@ var Map = function($container, bkImgUrl) {
         }
 
         return function(sprite){
-            var $el = sprite.$el;
-            $el.mouseover(function(){
-                showLinks(sprite);
-            });
-
-            $el.mouseout(clearAll);
+            sprite.$el
+                .mouseover(function(){
+                    showLinks(sprite);
+                })
+                .mouseout(clearAll);
         };
     })();
 

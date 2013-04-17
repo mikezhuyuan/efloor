@@ -5,5 +5,12 @@ window.Utils = {
         var sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
+    },
+    hideAllTips: function() {
+    	var items = Sprite.items;
+    	for(var id in items){
+    		var item = items[id];
+    		item.$el.qtip("hide");
+    	}
     }
 }
