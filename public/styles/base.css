@@ -443,19 +443,15 @@ html{
     background: #ffffd7;
 }
 
-.profile-name-edit{
+.profile-room .edit{
     display:none;
 }
 
-.profile-desc-edit{
-    display:none;
-}
-
-.editing .profile-name-edit, .editing .profile-desc-edit{
+.profile-room .editing .edit{
     display:block;
 }
 
-.editing .profile-name, .editing .profile-desc{
+.profile-room .editing .view{
     display:none;
 }
 
