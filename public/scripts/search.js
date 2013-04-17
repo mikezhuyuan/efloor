@@ -22,7 +22,7 @@ var Search = function(map){
                         (function(sprite){
                             el.click(function(){
                                 map.center(sprite.center());
-                                sprite.$el.qtip("show").css();
+                                sprite.$el.trigger('click');
                                 $search_txt.val(sprite.data.detail.name);
                             });
                         })(sprite);

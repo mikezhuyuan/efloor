@@ -19,25 +19,39 @@ var Sprite = (function(){
 
     Sprite.items = Object.create(null);
     Sprite.tmplSprite = _.template($("#tmplSprite").html());
-    Sprite.tmplOverlay  = _.template($("#tmplOverlay").html());
+    Sprite.tmplPersonTip  = _.template($("#tmplPersonTip").html());
+    Sprite.tmplRoomTip  = _.template($("#tmplRoomTip").html());
 
     Sprite.new = function(type, x, y) {
         var id = parseInt(Math.random() * 1000000000);
-        //TODO: handle person & meeting room
-        return new Sprite({
-            id:id,
-            type:type,
-            detail : {
-                x:x,
-                y:y,
-                title:"Title..",
-                img:"images/person.png",
-                team:"Team..",
-                name:"Name..",
-                from:"From..",
-                desc:"Hello.."
-            }
-        });
+        //TODO: display default value on page instead set as value
+        if(type === "person") {
+            return new Sprite({
+                id:id,
+                type:type,
+                detail : {
+                    x:x,
+                    y:y,
+                    title:"Title..",
+                    img:"images/person.png",
+                    team:"Team..",
+                    name:"Name..",
+                    from:"From..",
+                    desc:"Hello.."
+                }
+            });
+        } else if(type === "room"){
+            return new Sprite({
+                id:id,
+                type:type,
+                detail : {
+                    x:x,
+                    y:y,
+                    name:"Name..",
+                    desc:"Hello.."
+                }
+            });
+        }
     }
 
     Sprite.create = function(data) {

@@ -401,7 +401,7 @@ html{
 .profile-from{
     color:#8c8c8c;
 }
- .profile-content{
+ .profile-desc{
      margin: 8px 0;
  }
 .profile-position{
@@ -412,7 +412,7 @@ html{
 .profile-team,
 .profile-name,
 .profile-from,
-.profile-content,
+.profile-desc,
 .profile-avatar-url{
     padding:0 2px;
     outline: none;
@@ -421,7 +421,7 @@ html{
 .profile-team:hover,
 .profile-name:hover,
 .profile-from:hover,
-.profile-content:hover,
+.profile-desc:hover,
 .profile-avatar:hover{
     background: #ffffd7;
 }
@@ -441,6 +441,22 @@ html{
 .profile-editing .profile-avatar-url{
     display:block;
     background: #ffffd7;
+}
+
+.profile-name-edit{
+    display:none;
+}
+
+.profile-desc-edit{
+    display:none;
+}
+
+.editing .profile-name-edit, .editing .profile-desc-edit{
+    display:block;
+}
+
+.editing .profile-name, .editing .profile-desc{
+    display:none;
 }
 
 /*tips*/

@@ -47,7 +47,7 @@
         <span class="delete-sprite-button">×</span>
     </sprite>
 </script>
-<script type="text/template" id="tmplOverlay">
+<script type="text/template" id="tmplPersonTip">
     <div class="profile-person">
         <div class="profile-avatar"><img  class="profile-avatar-img" src="<%=detail.img%>" /><textarea class="profile-avatar-url"  field="img"></textarea></div>
         <ul class="profile-list">
@@ -55,8 +55,25 @@
             <li class="profile-team" field="team" contenteditable="true"><%=detail.team%></li>
             <li class="profile-name" field="name" contenteditable="true"><%=detail.name%></li>
             <li class="profile-from" field="from" contenteditable="true"><%=detail.from%></li>
-            <li class="profile-content" field="content" contenteditable="true"><%=detail.content%></li>
+            <li class="profile-desc" field="desc" contenteditable="true"><%=detail.desc%></li>
             <li class="profile-position"><a><%=window.location.origin+'/#id='+id%></a></li>
+        </ul>
+    </div>
+</script>
+<script type="text/template" id="tmplRoomTip">
+    <div class="profile-room">
+        <ul class="profile-list">
+            <li>
+                <div class="view profile-name"><%=detail.name%></div>
+                <input field="name" class="edit profile-name-edit" type="text" />
+            </li>
+            <li>
+                <div class="view profile-desc"><%=detail.desc%></div>
+                <textarea field="desc" class="edit profile-desc-edit"></textarea>
+            </li>
+            <li class="profile-position">
+                <a><%=window.location.origin+'/#id='+id%></a>
+            </li>
         </ul>
     </div>
 </script>

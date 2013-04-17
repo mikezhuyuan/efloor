@@ -78,6 +78,9 @@ var Map = function($container, bkImgUrl) {
         }
 
         function showLinks(sprite){
+            if(!sprite.data.detail.team)
+                return;
+            
             var items = Sprite.items;
             context.strokeStyle="#e16c5f";
             context.lineWidth = 4;
@@ -87,8 +90,8 @@ var Map = function($container, bkImgUrl) {
 
                 var item = items[id];
 
-
-                if(item.type === 'person' && item.data.detail.team === sprite.data.detail.team) {
+                if(item.type === 'person' &&  
+                    item.data.detail.team === sprite.data.detail.team) {
                     drawCurve(
                         sprite.x()+map.offsetX, 
                         sprite.y()+map.offsetY,
