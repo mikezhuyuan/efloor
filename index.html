@@ -36,9 +36,9 @@
     <canvas id="graph"></canvas>
     <div id="map"></div>
     <div id="search_result" class="search-result">
-        <a class="search-switch"><em></em></a>
         <ul class="search-result-list"></ul>
     </div>
+    <a class="search-switch"><em></em></a>
 </div>
 <script type="text/template" id="tmplSprite">
     <sprite sid="<%=id%>" 
@@ -50,31 +50,42 @@
 <script type="text/template" id="tmplPersonTip">
     <div class="profile-person">
         <div class="profile-avatar"><img  class="profile-avatar-img" src="<%=detail.img%>" /><textarea class="profile-avatar-url"  field="img"></textarea></div>
-        <ul class="profile-list">
-            <li class="profile-title" field="title" contenteditable="true"><%=detail.title%></li>
-            <li class="profile-team" field="team" contenteditable="true"><%=detail.team%></li>
-            <li class="profile-name" field="name" contenteditable="true"><%=detail.name%></li>
-            <li class="profile-from" field="from" contenteditable="true"><%=detail.from%></li>
-            <li class="profile-desc" field="desc" contenteditable="true"><%=detail.desc%></li>
-            <li class="profile-position"><a><%=window.location.origin+'/#id='+id%></a></li>
-        </ul>
+        <div class="profile-list">
+            <input type="text" class="profile-title" field="title" placeholder="Title.." value="<%=detail.title%>" />
+            <input type="text" class="profile-team" field="team" placeholder="Team.." value="<%=detail.team%>" />
+            <input type="text" class="profile-name" field="name" placeholder="Your name.." value="<%=detail.name%>" />
+            <input type="text" class="profile-from" field="from" placeholder="Where r u from.." value="<%=detail.from%>" />
+            <input type="text" class="profile-desc" field="desc" placeholder="Say hello to everybody.." value="<%=detail.desc%>" />
+            <span class="profile-position"><a><%=window.location.origin+'/#id='+id%></a></span>
+        </div>
     </div>
 </script>
 <script type="text/template" id="tmplRoomTip">
     <div class="profile-room">
-        <ul class="profile-list">
-            <li>
-                <div class="view profile-name"><%=detail.name%></div>
-                <input field="name" class="edit profile-name-edit" type="text" />
-            </li>
-            <li>
-                <div class="view profile-desc"><%=detail.desc%></div>
-                <textarea field="desc" class="edit profile-desc-edit"></textarea>
-            </li>
-            <li class="profile-position">
-                <a><%=window.location.origin+'/#id='+id%></a>
-            </li>
-        </ul>
+        <span class="profile-room-note">Meeting room</span>
+        <input type="text" class="profile-name" field="name" placeholder="Meeting room" value="<%=detail.name%>" />
+        <%if(detail.desc){%>
+            <div class="profile-desc-view"><%=detail.desc%></div>
+            <textarea field="desc" class="profile-desc-edit hide"></textarea>
+        <%}else{%>
+            <div class="profile-desc-view hide"><%=detail.desc%></div>
+            <textarea field="desc" class="profile-desc-edit"></textarea>
+        <%}%>
+        <span class="profile-position">
+            <a><%=window.location.origin+'/#id='+id%></a>
+        </span>
+    </div>
+</script>
+<script type="text/template" id="demoMeetingRoom">
+     <ul>
+         <% for(var i=0;i<data.length; i++){ %>
+             <li class="meetingroom-record"><span><%=data[i].startTime%></span>-<span class="meetingroom-time"><%=data[i].endTime%></span>Booked by<span class="meetingroom-owner"><%=data[i].owner%></span></li>
+         <%}%>
+     </ul>
+    <div class="meetingroom-equip-list">
+        <span class="meetingroom-equip">TV</span>
+        <span class="meetingroom-equip">Teleconference Systems</span>
+        <span class="meetingroom-equip">White Board</span>
     </div>
 </script>
 <script type="text/template" id="tmplSearchItem">

@@ -15,14 +15,23 @@ var Sprite = (function(){
         });
 
         this.setPosition(data.detail.x, data.detail.y);
+
+
     };
 
+    //meeting room demo html
+    Sprite.tmplDemoMeetingRoom = _.template($("#demoMeetingRoom").html());
     Sprite.items = Object.create(null);
     Sprite.tmplSprite = _.template($("#tmplSprite").html());
     Sprite.tmplPersonTip  = _.template($("#tmplPersonTip").html());
     Sprite.tmplRoomTip  = _.template($("#tmplRoomTip").html());
 
     Sprite.new = function(type, x, y) {
+        var demoInfo = [
+            {startTime:"10:15", endTime: "11:15", owner:"Lucy Wang"},
+            {startTime:"12:00", endTime: "13:00", owner:"Lorenzo Buosi"},
+            {startTime:"15:30", endTime: "16:45", owner:"Mauricio Estrella"}
+        ];
         var id = parseInt(Math.random() * 1000000000);
         //TODO: display default value on page instead set as value
         if(type === "person") {
@@ -32,12 +41,12 @@ var Sprite = (function(){
                 detail : {
                     x:x,
                     y:y,
-                    title:"Title..",
+                    title:"",
                     img:"images/person.png",
-                    team:"Team..",
-                    name:"Name..",
-                    from:"From..",
-                    desc:"Hello.."
+                    team:"",
+                    name:"",
+                    from:"",
+                    desc:""
                 }
             });
         } else if(type === "room"){
@@ -47,8 +56,8 @@ var Sprite = (function(){
                 detail : {
                     x:x,
                     y:y,
-                    name:"Name..",
-                    desc:"Hello.."
+                    name:"",
+                    desc: Sprite.tmplDemoMeetingRoom({data: demoInfo})
                 }
             });
         }

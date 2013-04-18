@@ -19,7 +19,7 @@ html{
     overflow: hidden;
     padding: 8px 16px;
     -webkit-user-select:none;
-    position: absolute;
+    position: relative;
     width: 100%;
     z-index: 99;
 }
@@ -247,12 +247,8 @@ html{
 }
 #container
 {
-    position:fixed;
     width:100%;
-    height:100%;
-    bottom:0;
-    right:0;
-    left:0;
+    position:relative;
     overflow:hidden;
     cursor: url( ../images/openhand.cur), default;
 }
@@ -269,15 +265,16 @@ html{
 }
 /*search result*/
 .search-result{
-    width: 200px;
+    width: 220px;
     height:100%;
     position:absolute;
-    top: 51px;
+    top: 0;
     left: 0;
     background: #fff;
     box-shadow: 1px 0 1px #aaa;
     border-right:1px solid #a8a8a8;
     display: none;
+    overflow-y: auto;
 }
 .search-result-item{
     border-top:1px solid #f9f9f9;
@@ -316,16 +313,18 @@ html{
 /*switch*/
 .search-switch{
     position: absolute;
-    right:0;
+    left:220px;
     top:0;
     display: block;
     width:18px;
     height:20px;
-    background: #ddd;
+    background: #fff;
+    box-shadow: 0 2px 0 #aaa;
+    border-right:1px solid #a8a8a8;
     text-align: center;
     cursor: pointer;
-    border-radius: 0 0 0 5px;
-    box-shadow: 0 1px 1px #aaa;
+    border-radius: 0 0 5px 0;
+    display: none;
 }
 .search-switch em{
     border-right:8px solid #999;
@@ -413,8 +412,10 @@ html{
 .profile-name,
 .profile-from,
 .profile-desc,
-.profile-avatar-url{
-    padding:0 2px;
+.profile-avatar-url,
+.profile-desc-edit{
+    border:0;
+    width:100%;
     outline: none;
 }
 .profile-title:hover,
@@ -422,7 +423,9 @@ html{
 .profile-name:hover,
 .profile-from:hover,
 .profile-desc:hover,
-.profile-avatar:hover{
+.profile-avatar:hover,
+.profile-editing .profile-avatar-url,
+.profile-desc-edit{
     background: #ffffd7;
 }
 .profile-editing:hover{
@@ -431,8 +434,9 @@ html{
 /*edit avatar*/
 .profile-avatar-url{
     display:none;
-    width:64px;
-    height:140px;
+    width:70px;
+    height:150px;
+    resize:none;
     overflow-y: auto;
 }
 .profile-editing img{
@@ -440,25 +444,46 @@ html{
 }
 .profile-editing .profile-avatar-url{
     display:block;
-    background: #ffffd7;
 }
-
-.profile-room .edit{
-    display:none;
+/*meeting room*/
+.profile-desc-view,
+.profile-desc-edit{
+    resize:none;
+    height:120px;
 }
-
-.profile-room .editing .edit{
-    display:block;
+.profile-room-note{
+    color:#ddd;
+    line-height: 1;
 }
-
-.profile-room .editing .view{
-    display:none;
+.profile-room .profile-name{
+    margin-top:0;
+}
+.meetingroom-record{
+    padding: 3px 0;
+    border-bottom: 1px dashed #e6e6e5;
+    color:#8c8c8c;
+}
+.meetingroom-time{
+    margin-right:8px;
+}
+.meetingroom-owner{
+    color:#3c6ba5;
+    margin-left:8px;
+}
+.meetingroom-equip-list{
+    margin-top:8px;
+    color:#8c8c8c;
+    overflow: hidden;
+}
+.meetingroom-equip{
+    padding:3px 10px;
+    float:left;
+    margin-right:5px;
+    background: #f3f3f2;
+    border-radius: 5px;
 }
 
 /*tips*/
-.qtip *[contenteditable=true]{
-    cursor: text;
-}
 .qtip{
     cursor: default;
 }
@@ -491,4 +516,31 @@ html{
 }
 .ui-draggable-dragging{
     z-index: 100;
+}
+
+
+::-webkit-scrollbar-track-piece{
+    background-color:#fff;
+    -webkit-border-radius:0;
+}
+::-webkit-scrollbar{
+    width:8px;
+    height:8px;
+}
+::-webkit-scrollbar-thumb{
+    height:50px;
+    background-color:#999;
+    -webkit-border-radius:4px;
+    outline:2px solid #fff;
+    outline-offset:-2px;
+    border: 2px solid #fff;
+}
+::-webkit-scrollbar-thumb:hover{
+    height:50px;
+    background-color:#9f9f9f;
+    -webkit-border-radius:4px;
+}
+
+.hide{
+    display: none;
 }

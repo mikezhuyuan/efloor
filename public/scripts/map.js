@@ -1,5 +1,7 @@
 var Map = function($container, bkImgUrl) {
     var map,
+        $html = $("html"),
+        $header =  $(".header"),
         $sprites = $container.find('#map'),
         $background = $container.find('#background'),
         context = $background[0].getContext('2d'),
@@ -62,6 +64,10 @@ var Map = function($container, bkImgUrl) {
         context.drawImage(bkImage, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 
+    function setMapHeight(){
+        $container.height($html.height() - $header.outerHeight());
+    }
+
     var Link = (function(){
         var $graph = $('#graph');
         var context = $graph[0].getContext('2d');
@@ -88,7 +94,7 @@ var Map = function($container, bkImgUrl) {
 
             var items = Sprite.items;
             context.strokeStyle="#e16c5f";
-            context.lineWidth = 4;
+            context.lineWidth = 1;
             for(var id in items){
                 if(id == sprite.id)
                     continue;
@@ -136,7 +142,7 @@ var Map = function($container, bkImgUrl) {
                     Utils.closeAllTips();
                 },
                 stop : function(e){
-                    if(sprite.update({x:e.pageX - map.offsetX, y:e.pageY - map.offsetY})){
+                    if(sprite.update({x:e.pageX - map.offsetX, y:e.pageY - map.offsetY - $header.outerHeight()})){
                         window.net.server('updateSprite', sprite.data);
                     }
                 }
@@ -187,8 +193,9 @@ var Map = function($container, bkImgUrl) {
                 });
         }
     });
-
+    setMapHeight();
     window.onresize = function(e){
+        setMapHeight();
         map.move(map.offsetX, map.offsetY);
     };
 

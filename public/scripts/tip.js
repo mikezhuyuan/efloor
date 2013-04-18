@@ -1,11 +1,7 @@
 var Tip = function(sprite) {
     var _this = sprite;
     function updateSprite(sprite, $field) {
-        var field = $field.attr("field"), val;
-        if(field === 'img')
-            val = $field.val();
-        else
-            val = $field.html();
+        var field = $field.attr("field"), val = $field.val();
 
         if(sprite.updateField(field, val)){
             window.net.server('updateSprite', sprite.data);
@@ -14,51 +10,44 @@ var Tip = function(sprite) {
 
     function person() {
         var $elemTip = $(Sprite.tmplPersonTip(_this.data))
-            , $details = $elemTip.find('li[contenteditable="true"]')
+            , $details = $elemTip.find('input')
             , $avatar = $elemTip.find(".profile-avatar")
             , $avatarImg = $avatar.find(".profile-avatar-img")
             , $avatarUrl = $avatar.find(".profile-avatar-url");
         $details.click(function(){
-            Utils.selectContents(this);
             $(this).siblings().removeClass("profile-editing");
         });
         //update data after hit enter
         $details.keypress(function(e){
-            var $field = $(this);
             if(e.keyCode === 13){
-                updateSprite(_this, $field);
-                $field.blur();
+                var $field = $(this);
                 $field.addClass("profile-editing");
                 $field.mousemove(function(){
                     $field.removeClass("profile-editing");
                     $field.unbind("mousemove");
                 });
+                $field.blur();
                 return false;
             }
         });
         $details.blur(function(){
-            var $field = $(this);
-            updateSprite(_this, $field);
+            updateSprite(_this, $(this));
         });
         //avatar
         $avatar.click(function(){
             var $field = $(this);
             $field.addClass("profile-editing");
-            $avatarUrl.val($avatarImg.attr("src"));
+            $avatarUrl.val($avatarImg.attr("src")).focus();
         });
         $avatarUrl.keypress(function(e){
-            var $field = $(this), val = $field.val();
             if(e.keyCode === 13){
-                updateSprite(_this, $field);
-                $field.blur();
-                $avatarImg.attr("src", val);
-                $avatar.removeClass("profile-editing");
+                $(this).blur();
                 return false;
             }
         });
-        $avatarUrl.blur(function(e){
+        $avatarUrl.blur(function(e) {
             var $field = $(this), val = $field.val();
-            _this.update($field.attr("field"),val);
+            updateSprite(_this, $field);
             $avatarImg.attr("src", val);
             $avatar.removeClass("profile-editing");
         });
@@ -66,24 +55,42 @@ var Tip = function(sprite) {
     }
 
     function room() {
-        var $elemTip = $(Sprite.tmplRoomTip(_this.data));
-        $elemTip.find('.view').click(function(){
-            var $input = $(this).parent()
-                                .addClass('editing')
-                                .find('.edit');
-            $input.val(_this.data.detail[$input.attr('field')]);
-            $input.select();
+        var $elemTip = $(Sprite.tmplRoomTip(_this.data)),
+            $details = $elemTip.find('input'),
+            $descView = $elemTip.find('.profile-desc-view'),
+            $descEdit = $elemTip.find('.profile-desc-edit')
+            field = $descEdit.attr('field');
+
+        //name
+        $details.click(function(){
+            $(this).siblings().removeClass("profile-editing");
         });
-
-        $elemTip.find('.edit').blur(function(){
-            var $input = $(this), val = $input.val();
-            $input.parent().find('.view').html(val);
-
-            if(_this.updateField($input.attr("field"), val)){
-                window.net.server('updateSprite', _this.data);
+        //update data after hit enter
+        $details.keypress(function(e){
+            if(e.keyCode === 13){
+                var $field = $(this);
+                $field.addClass("profile-editing");
+                $field.mousemove(function(){
+                    $field.removeClass("profile-editing");
+                    $field.unbind("mousemove");
+                });
+                $field.blur();
+                return false;
             }
-
-            $input.parent().removeClass('editing');
+        });
+        $details.blur(function(){
+            updateSprite(_this, $(this));
+        });
+        //descripton
+        $descView.click(function(){
+            $descEdit.val(_this.data.detail[field]);
+            $descView.hide();
+            $descEdit.show().focus();
+        });
+        $descEdit.blur(function(){
+            updateSprite(_this, $(this));
+            $descEdit.hide();
+            $descView.show();
         });
 
         return $elemTip;
