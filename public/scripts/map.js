@@ -8,16 +8,12 @@ var Map = function($container, bkImgUrl) {
 
     context.webkitImageSmoothingEnabled = false;
     bkImage.src = bkImgUrl;
-    bkImage.onload = function(){
-        bkImgLoaded = true;
-        drawBackground(0, 0);
-    };
-
+    drawBackground(0,0);
     function drawBackground(x, y) {
         if(!bkImgLoaded){
             bkImage.onload = function(){
                 bkImgLoaded = true;
-                drawBackground(x, y);
+                drawBackground(x || 0, y || 0);
             };
             return;
         }
@@ -25,13 +21,11 @@ var Map = function($container, bkImgUrl) {
         var width = $container.width(), 
             height = $container.height();
         
-        if($background.width() != width)
-            //$background.width(width); TODO: ? why not work
-            $background[0].width = width;
+        if($background.attr('width') != width)
+            $background.attr('width', width);
 
-        if($background.height() != height)
-            //$background.height(height);
-            $background[0].height = height;
+        if($background.attr('height') != height)
+            $background.attr('height', height);
 
         context.clearRect(0, 0, width, height);
         var sx = x, sy = y, sw = width, sh = height, 
