@@ -33,6 +33,7 @@ var Search = function(map){
             }
             else{
                 $search_result.hide();
+                $searchSwitch.hide().css({left:220});
             }
         }, 'json');
     }
