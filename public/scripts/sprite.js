@@ -99,7 +99,7 @@ var Sprite = (function(){
             }
         },
         updateField : function(field, val){
-            if(field && val && this.data.detail[field] != val){
+            if(field && this.data.detail[field] != val){
                 this.data.detail[field] = val;
                 if(field == 'img') {
                     this.$el.css('background-image', 'url('+val+')');
