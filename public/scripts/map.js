@@ -88,7 +88,7 @@ var Map = function($container, bkImgUrl) {
 
             var items = Sprite.items;
             context.strokeStyle="#e16c5f";
-            context.lineWidth = 1;
+            context.lineWidth = 2;
             for(var id in items){
                 if(id == sprite.id)
                     continue;
