@@ -29,11 +29,11 @@ var Search = function(map){
                     $search_result_list.append(el);
                 }
                 $search_result.css({marginLeft:0}).show();
-                $searchSwitch.show().removeClass("search-switch-show");
+                $searchSwitch.css({ left:220 }).show().removeClass("search-switch-show");
             }
             else{
                 $search_result.hide();
-                $searchSwitch.hide().css({ left:220 });
+                $searchSwitch.hide();
             }
         }, 'json');
     }
