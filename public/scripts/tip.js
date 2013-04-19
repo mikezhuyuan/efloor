@@ -90,7 +90,7 @@ var Tip = function(sprite) {
         $descEdit.blur(function(){
             updateSprite(_this, $(this));
             $descEdit.hide();
-            $descView.show();
+            $descView.html(_this.data.detail[field]).show();
         });
 
         return $elemTip;
